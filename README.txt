@@ -22,13 +22,25 @@ Files:
 
 CASE 2-----------------
 WIP
-The residents do x rounds of a game (x is a number YOU can decide) where they can win 0 to 10 points.
-They're all part of a different team, and we want tot plot the following:
-- that is the amount of scores within the teams that are below the average total score? And equal & above?
-- what is the total score for each participant?
-- what is the total number of rounds for each participant that they had the top score?
-- what is the number of top scores gained within each team?
-- what is the trend in scores across the subsequent rounds for each member of the Majis team?
+
+The residents of my house (from humans to plushies and figures) do x rounds of a game (x is a number YOU 
+can decide) where they can win 0 to 10 points in each round.
+Alternatively, you -the player- can define your own participants to the game instead of my residents.
+
+All participants are part of a team.
+
+After playing the desired number of rounds, we want to visualise the scores. First of all: in an Excel file,
+but also in graphs and even a report!
+
+What we want to plot in graphs, is the following:
+
+- Graph 1 - (WIP) what is the total score for each participant?
+- Graph 2 - (WIP) what is the average score for each participant?
+- Graph 3 - (WIP) what is the total number of rounds for each participant that they had the top score?
+- Graph 4 - (WIP) what is the number of top scores gained within each team, divided by the team size (no. of team members)?
+- Graph 5 - (WIP) what is the amount of scores within the teams that are below the average total score? And equal & above?
+- Graph 6 - (still to do) what is the average score for each team in Round 1 compared to Round 2? 
+- Graph 7 - (still to do) what is the trend in scores across the subsequent rounds for each member of the Majis team?
 
 Files:
 - dobbelsteen.py (code for generating the scores in each round)
@@ -37,11 +49,7 @@ Files:
 These will generate the files:
 - dice_scores.xlsx
 - dice_scores_processed.xlsx
-- scores.png
-- scores2.png
-- scores3.png
-- scores4.png
-- scores5.png
+- Graph1.png until Graph7.png
 
 
 CASE 3-----------------

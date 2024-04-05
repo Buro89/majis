@@ -29,7 +29,7 @@ import os
 
 # %%
 
-theChosenPath = "C://Users//Karlijn//Documents//Python_Developer//matplotlib_fullcourse//majis//"
+theChosenPath = os.path.join(os.path.dirname(__file__))
 
 # dataset with the entities selected for winter       = "selection_winter.xlsx"
 # "..." summer                                        = "selection_summer.xlsx"

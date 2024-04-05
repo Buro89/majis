@@ -11,7 +11,6 @@ the_chosen_path = os.path.join(os.path.dirname(__file__))
 
 data     = pd.read_excel(os.path.join(the_chosen_path, "dice_scores.xlsx"))
 
-
 def print_proportion_table(var_name, dataset):
     print("")
     print(f"Proportions for {var_name}")
@@ -35,8 +34,13 @@ def get_sumstats(var_name, dataset):
 
 
 def save_and_show_plot(filename, transparency):
-    plt.savefig(f"{the_chosen_path}{filename}.png", dpi=500, transparent=transparency, bbox_inches="tight")
+    plt.savefig(f"{the_chosen_path}/{filename}.png", dpi=500, transparent=transparency, bbox_inches="tight")
     plt.show()
+
+
+def print_paragraph(text):
+    print("\n\n\n\n", 50 * "*", text, 50 * "*", "\n")
+
 
 number_of_participants = data.shape[0]
 number_of_rounds = data.shape[1] - 3
@@ -58,29 +62,40 @@ while counter < 1:
     
     counter += 1
 
+    participant_names = data["Participant"].tolist()
+    participant_colors = {
+        participant: sns.color_palette("rocket", n_colors=len(participant_names))[i]
+        for i, participant in enumerate(participant_names)
+    }
+    
+    
+    team_names = data["Team"].tolist()
+    team_colors = {
+        team: sns.color_palette("rocket", n_colors=len(team_names))[i]
+        for i, team in enumerate(team_names)
+    }
+
     round_columns = [f"Round_{round_number}" for round_number in range(1, number_of_rounds + 1)]
+    
     data["total_score"] = data[round_columns].sum(axis=1)
-    print("Total score per participant:")
+    data["average_score"] = data[round_columns].mean(axis=1)
+
+    print_paragraph("Total Score Per Participant:")
     for i in range(1, number_of_participants + 1):
         for index, row in data.iterrows():
             if row["ID"] == i:
                 total_score = row["total_score"]
                 print(f"{row['Participant']} has a total score of {total_score}")
 
+    print_paragraph("Summary Statistics Total Score Of All Participants:")
     print(get_sumstats("total_score", data))
 
-
-
-
-    average_total_score = data["total_score"].mean()
-    data["final_evaluation"] = data["total_score"].apply(lambda x: 1 if x >= average_total_score else 0)
-
+    print_paragraph("Average Score Per Participant:")
     for i in range(1, number_of_participants + 1):
         for index, row in data.iterrows():
             if row["ID"] == i:
-                total_score = row["total_score"]
-                print(f"{row['Participant']} has a total score of {total_score}")
-
+                average_score = row["average_score"]
+                print(f"{row['Participant']} has an average score of {average_score}")
 
     for i in range(1, number_of_rounds + 1):
         globals()[f"highest_round{i}"] = data[f"Round_{i}"].max()
@@ -95,29 +110,96 @@ while counter < 1:
 
     top_position_columns = [f"top_participant{round_number}_dummy" for round_number in range(1, number_of_rounds + 1)]
     data["total_top_positions"] = data[top_position_columns].sum(axis=1)
-    print("Total times a participant was at top position in all rounds:")
+    
+    print_paragraph("Total Times A Participant Had Top Score:")
     for i in range(1, number_of_participants + 1):
         for index, row in data.iterrows():
             if row["ID"] == i:
                 total_top_positions = row["total_top_positions"]
                 print(f"{row['Participant']} was in the top at {total_top_positions}")
 
+    print_paragraph("Summary Statistics Top Score Occurences Of All Participants:")
     print(get_sumstats("total_top_positions", data))
 
+    team_top_scores_mean = data.groupby("Team")["total_top_positions"].mean().reset_index()
+    team_top_scores_mean.columns = ["Team", "Average No. Of Top Scores For Team"]
+    data = pd.merge(data, team_top_scores_mean, on="Team")
+    
 
-    # General overview of the dataframe
-    print("\n\n" + (10*"-") + "Global info about the dataframe" + (10*"-") + "\n\n")
+
+    print_paragraph("Global Info About The Score Dataframe")
     data.info()
     print(f"\n\n {data.head} \n\n")
 
+    # GRAPH 1
+    sns.set(style="whitegrid", font="Garamond")
+    plt.rcParams["font.family"] = "Garamond"
+    plt.figure(figsize=(14, 6))
+    sns.barplot(data=data, x="Participant", y="total_score", palette=participant_colors, alpha = 0.7, width=1, errorbar = None)
+    plt.xlabel("Participant", fontsize=32, labelpad=18)
+    plt.ylabel("Total Score", fontsize=32, labelpad=18)
+    plt.xticks(fontsize=24, rotation=90)
+    plt.yticks(fontsize=24)
+    plt.ylim(0, 110)
+    save_and_show_plot("Graph1", False)
+
+    print_paragraph("TABLE - Total Scores Of Participants")
+    print_proportion_table_per_group("total_score", "Participant", data)
+
+    # GRAPH 2
+    sns.set(style="whitegrid", font="Garamond")
+    plt.rcParams["font.family"] = "Garamond"
+    plt.figure(figsize=(14, 6))
+    sns.barplot(data=data, x="Participant", y="average_score", palette=participant_colors, alpha = 0.7, width=1, errorbar = None)
+    plt.xlabel("Participant", fontsize=32, labelpad=18)
+    plt.ylabel("Average Score", fontsize=32, labelpad=18)
+    plt.xticks(fontsize=24, rotation=90)
+    plt.yticks(fontsize=24)
+    plt.ylim(0, 110)
+    save_and_show_plot("Graph2", False)
+
+    print_paragraph("TABLE - Average Scores Of Participants")
+    print_proportion_table_per_group("average_score", "Participant", data)
+
+    # GRAPH 3
+    sns.set(style="whitegrid", font="Garamond")
+    plt.rcParams["font.family"] = "Garamond"
+    plt.figure(figsize=(14, 6))
+    sns.barplot(data=data, x="Participant", y="total_top_positions", palette=participant_colors, alpha = 0.7, width=1, errorbar = None)
+    plt.xlabel("Participant", fontsize=32, labelpad=18)
+    plt.ylabel("Total rounds at top", fontsize=32, labelpad=18)
+    plt.xticks(fontsize=24, rotation=90)
+    plt.yticks(fontsize=24)
+    plt.ylim(0, 6)
+    save_and_show_plot("Graph3", False)
+
+    print_paragraph("TABLE - Total Top Positions for Each Participant")
+    print_proportion_table_per_group("total_top_positions", "Participant", data)
+
+    # GRAPH 4
+    sns.set(style="whitegrid", font="Garamond")
+    plt.rcParams["font.family"] = "Garamond"
+    plt.figure(figsize=(14, 9))
+    sns.barplot(data=data, x="Team", y="Average No. Of Top Scores For Team", palette=team_colors, alpha = 0.7, width=1, errorbar = None)
+    plt.ylabel("Average rounds that team members were at top", fontsize=32, labelpad=18)
+    plt.xlabel("Teams", fontsize=32, labelpad=18)
+    plt.xticks(fontsize=24, rotation=90)
+    plt.yticks(fontsize=24)
+    plt.ylim(0, 5)
+    save_and_show_plot("Graph4", False)
+
+    print_paragraph("TABLE - Average rounds that team members were at top")
+    print_proportion_table_per_group("Average No. Of Top Scores For Team", "Team", data)
+
+    # GRAPH 5
+    average_total_score = data["total_score"].mean()
+    data["final_evaluation"] = data["total_score"].apply(lambda x: 1 if x >= average_total_score else 0)
+    above_average_score_data = data[data["final_evaluation"] == 1]
+    below_average_score_data = data[data["final_evaluation"] == 0]
 
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 9))
-
-    above_average_score_data = data[data["final_evaluation"] == 1]
-    below_average_score_data = data[data["final_evaluation"] == 0]
-
     sns.countplot(data=data, x="Team", hue="final_evaluation", dodge=True, palette={0: "#d18e75", 1: "#176482"}, alpha=0.7)
     plt.ylabel("Quantity", fontsize=32, labelpad=18)
     plt.xlabel("Teams", fontsize=32, labelpad=18)
@@ -125,49 +207,16 @@ while counter < 1:
     plt.yticks(fontsize=24)
     plt.ylim(0, 5)
     plt.legend(title="Evaluation", loc="upper right", fontsize=22, title_fontsize="24", labels=["Below average", "Above average"])
-    #save_and_show_plot("scores", False)
+    save_and_show_plot("Graph5", False)
 
+    print_paragraph("TABLE - Proportion of Scores Above Average per Team")
     print_proportion_table_per_group("final_evaluation", "Team", data)
 
 
-    sns.set(style="whitegrid", font="Garamond")
-    plt.rcParams["font.family"] = "Garamond"
-    plt.figure(figsize=(14, 6))
-
-    participant_names = data["Participant"].tolist()
-
-    participant_colors = {
-        participant: sns.color_palette("rocket", n_colors=len(participant_names))[i]
-        for i, participant in enumerate(participant_names)
-    }
-
-    sns.barplot(data=data, x="Participant", y="total_score", palette=participant_colors, alpha = 0.7, width=1, errorbar = None)
-    plt.xlabel("Participant", fontsize=32, labelpad=18)
-    plt.ylabel("Total Score", fontsize=32, labelpad=18)
-    plt.xticks(fontsize=24, rotation=90)
-    plt.yticks(fontsize=24)
-    plt.ylim(0, 110)
-    save_and_show_plot("scores2", False)
-
-
-    print_proportion_table_per_group("total_score", "Participant", data)
 
 
 
-    #sns.set(style="whitegrid", font="Garamond")
-    #plt.rcParams["font.family"] = "Garamond"
-    #plt.figure(figsize=(14, 6))
 
-    #sns.barplot(data=data, x="Participant", y="total_top_positions", palette={"Cyber": "#d18e75", "Futaba": "#176482", "Okita": "pink", "Nagakura": "#F2C6B6", "Jokah": "#89c6b6", "Yamai": "#60272b", "Karola": "#af793d", "Goromi": "orange", "Kirby": "#5ea46b", "Nozomi": "red", "Bunchan": "#60cea4", "Inizio": "brown", "Star": "black", "Nishitani" :"salmon", "Saejima": "darkgreen", "Altan": "lightblue", "Ryoma": "lightgreen", "Sasaki": "#321B12", "Majima": "#34504e", "Kiryu": "#0f3c48"}, alpha = 0.7, width=1)
-    #plt.xlabel("Participant", fontsize=32, labelpad=18)
-    #plt.ylabel("Total rounds at top", fontsize=32, labelpad=18)
-    #plt.xticks(fontsize=24, rotation=90)
-    #plt.yticks(fontsize=24)
-    #plt.ylim(0, 6)
-    #save_and_show_plot("scores3", False)
-
-
-    #print_proportion_table_per_group("total_top_positions", "Participant", data)
 
 
     #sns.set(style="whitegrid", font="Garamond")
@@ -186,15 +235,15 @@ while counter < 1:
     #print_proportion_table_per_group("total_top_positions", "Team", data)
 
 
-    #data.to_excel(os.path.join(the_chosen_path, "dice_scores_processed.xlsx"), index=False)
+    data.to_excel(os.path.join(the_chosen_path, "dice_scores_processed.xlsx"), index=False)
 
 
     input("Press key to end ")
 
     # Actiepunten:
-    # Maak de grafieken nog mooier! Legenda op perfecte plek, andere twee grafieken ook een legenda
-    # Nu is 1 grafiek 'goed' gedaan met palet (onafhankelijk van wie en hoeveel deelnemen, werkt de code). Nu voor de rest ook doen
+    # Maak de code mooier met #%# of zoiets en docstring
+    # Maak de grafieken nog mooier! Legenda wel of niet. Kleuren goed? Y-as range afhankelijk maken van scorerange.
+    # De twee andere grafieken ook nog doen (Graph 6 en 7)
     # Kijken waar meer functies kunnen worden gedefinieerd.
-    # 'Trendgrafiek van de Majis van hoe goed zij scoren door de loop van alle rondes heen
-    # Alle grafieken en tevens tabellen naar een Word document pipen, met nog wat tekst erbij! Allemaal geautomatiseerd!
-    # Maak de grafieken relevanter. Aantal maximaal gewonnen per speleraantal. Etc.
+    # Tabellen bepalen: wat wil je in tabellen in de report
+    # Report maken met tabellen, grafieken en tekst. Allemaal geautomatiseerd!
