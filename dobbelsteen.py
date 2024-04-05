@@ -3,7 +3,10 @@ from statistics import mean
 import random
 import pandas as pd
 
-working_dir = "C://Users//Karlijn//Documents//Python_Developer//matplotlib_fullcourse//majis"
+working_dir = os.path.join(os.path.dirname(__file__))
+#print(f"----------------------- CHECK: You are currently working in {working_dir}")
+
+relative_path = os.path.join("folder",)
 
 class Residents:
     def __init__(self):

@@ -7,7 +7,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-the_chosen_path = "C://Users//Karlijn//Documents//Python_Developer//matplotlib_fullcourse//majis//"
+the_chosen_path = os.path.join(os.path.dirname(__file__))
 
 data     = pd.read_excel(os.path.join(the_chosen_path, "dice_scores.xlsx"))
 
@@ -193,7 +193,8 @@ while counter < 1:
 
     # Actiepunten:
     # Maak de grafieken nog mooier! Legenda op perfecte plek, andere twee grafieken ook een legenda
+    # Nu is 1 grafiek 'goed' gedaan met palet (onafhankelijk van wie en hoeveel deelnemen, werkt de code). Nu voor de rest ook doen
+    # Kijken waar meer functies kunnen worden gedefinieerd.
     # 'Trendgrafiek van de Majis van hoe goed zij scoren door de loop van alle rondes heen
     # Alle grafieken en tevens tabellen naar een Word document pipen, met nog wat tekst erbij! Allemaal geautomatiseerd!
-    # Deze code wat netter maken
-    # dobbelsteen.py naar scores_analyses_and_visualisation.py laten overgaan
+    # Maak de grafieken relevanter. Aantal maximaal gewonnen per speleraantal. Etc.
