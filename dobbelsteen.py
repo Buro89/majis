@@ -64,13 +64,27 @@ resident20 = Residents()
 resident20.id = 20
 
 preference = ""
-while preference.upper() != "A" and preference.upper() != "B":
-    preference = input("""Let the residents of my house participate, or choose other participants?
-                    A. Residents
-                    B. Define my own """)
-if preference.upper() not in ["A", "B"]:
-    print("\nYou didn't answer A or B. Try again.\n")
+while preference.upper() != "A" and preference.upper() != "B" and preference.upper() != "C":
+    preference = input("""Let all residents of my house participate, only the Majis, or choose other (max. 20) participants?
+                    A. All Residents
+                    B. Only the Majis
+                    C. Define my own """)
+if preference.upper() not in ["A", "B", "C"]:
+    print("\nYou didn't answer A, B or C. Try again.\n")
 elif preference.upper() == "B":
+    number_of_participants_entered = 5
+    resident1.name = "Altan"
+    resident1.team = "Pocky Lovers"
+    resident2.name = "Goromi"
+    resident2.team = "Pocky Lovers"
+    resident3.name = "Cyber"
+    resident3.team = "Chocolate Lovers"
+    resident4.name = "Nozomi"
+    resident4.team = "Chocolate Lovers"
+    resident5.name = "Inizio"
+    resident5.team = "Pocky Lovers"
+    pass
+elif preference.upper() == "C":
     number_of_participants_entered = 0
     command = ""
     while command.upper() != "B":
