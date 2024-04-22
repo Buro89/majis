@@ -41,14 +41,23 @@ def save_and_show_plot(filename, transparency):
 def print_paragraph(text):
     print("\n\n\n\n", 50 * "*", text, 50 * "*", "\n")
 
-
 number_of_participants = data.shape[0]
 number_of_rounds = data.shape[1] - 3
+number_of_team_members = data["Team"].value_counts().sort_index()
+largest_team = number_of_team_members.max()
 
 print(f"""Check: 
 - you have {number_of_participants} partcipants;
 - you have {number_of_rounds} rounds
+- you have {largest_team} members in your largest team.")
 """)
+
+
+def determine_max_y_axis(depvar, dataset):
+        max_score = dataset[depvar].max()
+        max_y_axis = max_score + max_score * 0.2
+        return max_y_axis
+
 
 counter = 0
 while counter < 1:
@@ -123,15 +132,16 @@ while counter < 1:
 
     team_top_scores_mean = data.groupby("Team")["total_top_positions"].mean().reset_index()
     team_top_scores_mean.columns = ["Team", "Average No. Of Top Scores For Team"]
-    data = pd.merge(data, team_top_scores_mean, on="Team")
-    
-
+    teamdata = pd.merge(data, team_top_scores_mean, on="Team")
 
     print_paragraph("Global Info About The Score Dataframe")
     data.info()
     print(f"\n\n {data.head} \n\n")
 
     # GRAPH 1
+
+
+    max_y_axis = determine_max_y_axis("total_score", data)
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 6))
@@ -140,13 +150,14 @@ while counter < 1:
     plt.ylabel("Total Score", fontsize=32, labelpad=18)
     plt.xticks(fontsize=24, rotation=90)
     plt.yticks(fontsize=24)
-    plt.ylim(0, 110)
+    plt.ylim(0, max_y_axis)
     save_and_show_plot("Graph1", False)
 
     print_paragraph("TABLE - Total Scores Of Participants")
     print_proportion_table_per_group("total_score", "Participant", data)
 
     # GRAPH 2
+    max_y_axis = determine_max_y_axis("average_score", data)
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 6))
@@ -155,13 +166,14 @@ while counter < 1:
     plt.ylabel("Average Score", fontsize=32, labelpad=18)
     plt.xticks(fontsize=24, rotation=90)
     plt.yticks(fontsize=24)
-    plt.ylim(0, 110)
+    plt.ylim(0, max_y_axis)
     save_and_show_plot("Graph2", False)
 
     print_paragraph("TABLE - Average Scores Of Participants")
     print_proportion_table_per_group("average_score", "Participant", data)
 
     # GRAPH 3
+    max_y_axis = determine_max_y_axis("total_top_positions", data)
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 6))
@@ -170,26 +182,28 @@ while counter < 1:
     plt.ylabel("Total rounds at top", fontsize=32, labelpad=18)
     plt.xticks(fontsize=24, rotation=90)
     plt.yticks(fontsize=24)
-    plt.ylim(0, 6)
+    plt.ylim(0, max_y_axis)
     save_and_show_plot("Graph3", False)
 
     print_paragraph("TABLE - Total Top Positions for Each Participant")
     print_proportion_table_per_group("total_top_positions", "Participant", data)
 
     # GRAPH 4
+
+    max_y_axis = determine_max_y_axis("Average No. Of Top Scores For Team", teamdata)
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 9))
-    sns.barplot(data=data, x="Team", y="Average No. Of Top Scores For Team", palette=team_colors, alpha = 0.7, width=1, errorbar = None)
+    sns.barplot(data=teamdata, x="Team", y="Average No. Of Top Scores For Team", palette=team_colors, alpha = 0.7, width=1, errorbar = None)
     plt.ylabel("Average rounds that team members were at top", fontsize=32, labelpad=18)
     plt.xlabel("Teams", fontsize=32, labelpad=18)
     plt.xticks(fontsize=24, rotation=90)
     plt.yticks(fontsize=24)
-    plt.ylim(0, 5)
+    plt.ylim(0, max_y_axis)
     save_and_show_plot("Graph4", False)
 
     print_paragraph("TABLE - Average rounds that team members were at top")
-    print_proportion_table_per_group("Average No. Of Top Scores For Team", "Team", data)
+    print_proportion_table_per_group("Average No. Of Top Scores For Team", "Team", teamdata)
 
     # GRAPH 5
     average_total_score = data["total_score"].mean()
@@ -197,6 +211,7 @@ while counter < 1:
     above_average_score_data = data[data["final_evaluation"] == 1]
     below_average_score_data = data[data["final_evaluation"] == 0]
 
+    max_y_axis = largest_team + largest_team * 0.2
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 9))
@@ -205,7 +220,7 @@ while counter < 1:
     plt.xlabel("Teams", fontsize=32, labelpad=18)
     plt.xticks(fontsize=24, rotation=90)
     plt.yticks(fontsize=24)
-    plt.ylim(0, 5)
+    plt.ylim(0, max_y_axis)
     plt.legend(title="Evaluation", loc="upper right", fontsize=22, title_fontsize="24", labels=["Below average", "Above average"])
     save_and_show_plot("Graph5", False)
 
@@ -242,8 +257,9 @@ while counter < 1:
 
     # Actiepunten:
     # Maak de code mooier met #%# of zoiets en docstring
-    # Maak de grafieken nog mooier! Legenda wel of niet. Kleuren goed? Y-as range afhankelijk maken van scorerange.
+    # Maak de grafieken nog mooier! Legenda wel of niet. Kleuren goed?
     # De twee andere grafieken ook nog doen (Graph 6 en 7)
     # Kijken waar meer functies kunnen worden gedefinieerd.
     # Tabellen bepalen: wat wil je in tabellen in de report
     # Report maken met tabellen, grafieken en tekst. Allemaal geautomatiseerd!
+    # Kijk of je code HELEMAAL object oriented kan! En efficienter.

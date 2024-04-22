@@ -177,6 +177,7 @@ while run_another_round:
 
 print("\n\nOkay cool. The game was fun. Now we'll construct the dataframe. See file 'dice_scores.xlsx'\n\n")
 
+
 data = {"Participant": [participant.name for participant in participants],
         "ID":  [participant.id for participant in participants],
         "Team": [participant.team for participant in participants]}
