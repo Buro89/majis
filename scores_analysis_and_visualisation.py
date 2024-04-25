@@ -1,3 +1,37 @@
+# -*- coding: utf-8 -*-
+"""
+Created somewhere between March and May 2024
+
+@author: Buro89
+
+Case:
+See docstring dobbelsteen.py
+
+After playing the desired number of rounds in dobbelsteen.py, the scores are summarized with this script here: in an Excel file, 
+but also in graphs and even a report!
+The excel file, visualisations and report dynamically adjust to the number of rounds and players chosen by USER.
+
+The plots:
+- Graph 1 - (WIP) what is the total score for each participant?
+- Graph 2 - (WIP) what is the average score for each participant?
+- Graph 3 - (WIP) what is the total number of rounds for each participant that they had the top score?
+- Graph 4 - (WIP) what is the number of top scores gained within each team, divided by the team size (no. of team members)?
+- Graph 5 - (WIP) what is the amount of scores within the teams that are below the average total score? And equal & above?
+- Graph 6 - (WIP) what is the average score for each team in Round 1 compared to Round 2? 
+- Graph 7 - (still to do) what is the trend in scores across the subsequent rounds for each member of the Majis team?
+
+Files:
+- this file is called in dobbelsteen.py (code for generating the scores in each round)
+
+Dependencies:
+- dice_scores.xlsx in the working directory
+
+Output files:
+- dice_scores_processed.xlsx
+- Graph1.png until Graph7.png
+
+"""
+
 import os
 import statistics
 from statistics import mean
@@ -7,9 +41,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
+# %%
+
 the_chosen_path = os.path.join(os.path.dirname(__file__))
 
 data     = pd.read_excel(os.path.join(the_chosen_path, "dice_scores.xlsx"))
+
+# %%
 
 def print_proportion_table(var_name, dataset):
     print("")
@@ -40,13 +78,15 @@ def save_and_show_plot(filename, transparency):
 
 def print_paragraph(text):
     print("\n\n\n\n", 50 * "*", text, 50 * "*", "\n")
-    
+
 
 def determine_max_y_axis(depvar, dataset):
     max_score = dataset[depvar].max()
     max_y_axis = max_score + max_score * 0.2
     return max_y_axis
 
+
+# %%
 
 number_of_participants = data.shape[0]
 number_of_rounds = data.shape[1] - 3
@@ -59,18 +99,25 @@ print(f"""Check:
 - you have {largest_team} members in your largest team.")
 """)
 
+# %%
 
 counter = 0
 while counter < 1:
     introtext = input("""
                                 Hello. Now we're going to analyse the score data and output some graphs!
 
-                                Press a key to continue! OR type 'stop' to quit! """)
+                                Hit [ENTER] to continue! OR type 'stop' to quit! """)
 
     if introtext.lower() == "stop":
         break
+    elif len(introtext) == 0:
+        counter+=1
+        pass
+    else:
+        print_paragraph("You probably made a typo or something went wrong. Try answering again.")
+        continue
     
-    counter += 1
+# %%
 
     participant_names = data["Participant"].tolist()
     participant_colors = {
@@ -78,12 +125,13 @@ while counter < 1:
         for i, participant in enumerate(participant_names)
     }
     
-    
     team_names = data["Team"].tolist()
     team_colors = {
         team: sns.color_palette("rocket", n_colors=len(team_names))[i]
         for i, team in enumerate(team_names)
     }
+
+# %%
 
     round_columns = [f"Round_{round_number}" for round_number in range(1, number_of_rounds + 1)]
     
@@ -111,6 +159,8 @@ while counter < 1:
         globals()[f"highest_round{i}"] = data[f"Round_{i}"].max()
         data[f"top_participant{i}"] = (data[f"Round_{i}"] == globals()[f"highest_round{i}"])
 
+# %%
+
     rank_mapping = {
         False: 0,
         True: 1}
@@ -135,13 +185,15 @@ while counter < 1:
     team_top_scores_mean.columns = ["Team", "Average No. Of Top Scores For Team"]
     teamdata = pd.merge(data, team_top_scores_mean, on="Team")
 
+# %%
+
     print_paragraph("Global Info About The Score Dataframe")
     data.info()
     print(f"\n\n {data.head} \n\n")
 
+# %%
+
     # GRAPH 1
-
-
     max_y_axis = determine_max_y_axis("total_score", data)
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
@@ -190,7 +242,6 @@ while counter < 1:
     print_proportion_table_per_group("total_top_positions", "Participant", data)
 
     # GRAPH 4
-
     max_y_axis = determine_max_y_axis("Average No. Of Top Scores For Team", teamdata)
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
@@ -271,9 +322,11 @@ while counter < 1:
 
     #print_proportion_table_per_group("total_top_positions", "Team", data)
 
+# %%
 
     data.to_excel(os.path.join(the_chosen_path, "dice_scores_processed.xlsx"), index=False)
 
+# %%
 
     input("Press key to end ")
 
