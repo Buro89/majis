@@ -40,6 +40,13 @@ def save_and_show_plot(filename, transparency):
 
 def print_paragraph(text):
     print("\n\n\n\n", 50 * "*", text, 50 * "*", "\n")
+    
+
+def determine_max_y_axis(depvar, dataset):
+    max_score = dataset[depvar].max()
+    max_y_axis = max_score + max_score * 0.2
+    return max_y_axis
+
 
 number_of_participants = data.shape[0]
 number_of_rounds = data.shape[1] - 3
@@ -51,12 +58,6 @@ print(f"""Check:
 - you have {number_of_rounds} rounds
 - you have {largest_team} members in your largest team.")
 """)
-
-
-def determine_max_y_axis(depvar, dataset):
-        max_score = dataset[depvar].max()
-        max_y_axis = max_score + max_score * 0.2
-        return max_y_axis
 
 
 counter = 0
@@ -215,7 +216,7 @@ while counter < 1:
     sns.set(style="whitegrid", font="Garamond")
     plt.rcParams["font.family"] = "Garamond"
     plt.figure(figsize=(14, 9))
-    sns.countplot(data=data, x="Team", hue="final_evaluation", dodge=True, palette={0: "#d18e75", 1: "#176482"}, alpha=0.7)
+    sns.countplot(data=data, x="Team", hue="final_evaluation", dodge=True, palette={0: "#d18e75", 1: "#176482"}, linewidth=2, alpha=0.7)
     plt.ylabel("Quantity", fontsize=32, labelpad=18)
     plt.xlabel("Teams", fontsize=32, labelpad=18)
     plt.xticks(fontsize=24, rotation=90)
@@ -227,9 +228,30 @@ while counter < 1:
     print_paragraph("TABLE - Proportion of Scores Above Average per Team")
     print_proportion_table_per_group("final_evaluation", "Team", data)
 
+    # GRAPH 6
+    teamdata_rounds = data.melt(id_vars=["Team", "Participant"],
+                                value_vars=["Round_1", "Round_2"],
+                                var_name="Round",
+                                value_name="Score")
+    mean_scores_team_round = teamdata_rounds.groupby(["Team", "Round"])["Score"].mean().reset_index()
 
+    print(teamdata_rounds)
+    max_y_axis = determine_max_y_axis("Score", mean_scores_team_round)
+    sns.set(style="whitegrid", font="Garamond")
+    plt.rcParams["font.family"] = "Garamond"
+    plt.figure(figsize=(14, 9))
+    sns.barplot(data=mean_scores_team_round, x="Team", y="Score", hue="Round", palette={"Round_1": "#d18e75", "Round_2": "#176482"}, alpha = 0.7, linewidth=2, errorbar = None)
+    plt.ylabel("Average score", fontsize=32, labelpad=18)
+    plt.xlabel("Teams", fontsize=32, labelpad=18)
+    plt.xticks(fontsize=24, rotation=90)
+    plt.yticks(fontsize=24)
+    plt.ylim(0, max_y_axis)
+    save_and_show_plot("Graph6", False)
 
+    print_paragraph("TABLE - Average score for teams in Round 1")
+    print(data.groupby(["Team"])["Round_1"].mean().reset_index)
 
+  
 
 
 

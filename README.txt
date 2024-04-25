@@ -39,7 +39,7 @@ What we want to plot in graphs, is the following:
 - Graph 3 - (WIP) what is the total number of rounds for each participant that they had the top score?
 - Graph 4 - (WIP) what is the number of top scores gained within each team, divided by the team size (no. of team members)?
 - Graph 5 - (WIP) what is the amount of scores within the teams that are below the average total score? And equal & above?
-- Graph 6 - (still to do) what is the average score for each team in Round 1 compared to Round 2? 
+- Graph 6 - (WIP) what is the average score for each team in Round 1 compared to Round 2? 
 - Graph 7 - (still to do) what is the trend in scores across the subsequent rounds for each member of the Majis team?
 
 Files:
