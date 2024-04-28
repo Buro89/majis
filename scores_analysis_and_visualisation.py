@@ -40,13 +40,23 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import docx
+from docx import Document
+from docx.shared import Pt
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.oxml import OxmlElement
+from docx.oxml.ns import nsdecls
+from docx.oxml.ns import qn
+from tabulate import tabulate
 
 # %%
 
 the_chosen_path = os.path.join(os.path.dirname(__file__))
 
 data     = pd.read_excel(os.path.join(the_chosen_path, "dice_scores.xlsx"))
-
+print(the_chosen_path)
 # %%
 
 def print_proportion_table(var_name, dataset):
@@ -69,6 +79,151 @@ def get_sumstats(var_name, dataset):
            Median {var_name}\t\t{dataset[var_name].median()}
            Min {var_name}\t\t{dataset[var_name].min()}
            Max {var_name}\t\t{dataset[var_name].max()}"""
+
+def tabulate_table_to_word(var_name_1, pretty_name_1, var_name_2, pretty_name_2, printing, var_type_2):
+    
+    selected_columns = [var_name_1, var_name_2]
+    if printing == True:
+        print(tabulate(data[selected_columns], headers="keys", tablefmt="pretty"))
+    else:
+        tabulate(data[selected_columns], headers="keys", tablefmt="pretty")
+
+    doc = Document()
+
+    table = doc.add_table(rows=1, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+    # Set table style
+    table.style = "Light Shading Accent 4"
+    
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = f"\n{pretty_name_1}\n"
+    hdr_cells[1].text = f"\n{pretty_name_2}\n"
+    
+    for index, row in data[selected_columns].iterrows():
+        row_cells = table.add_row().cells
+        row_cells[0].text = f"\n{row[var_name_1]}\n"
+        if var_type_2.lower == "float":
+            var_2_formatted = "{:1.f}".format(var_type_2)
+            row_cells[1].text = f"\n{row[var_2_formatted]:.1f}\n" if pd.notnull(row[var_2_formatted]) else "\n"
+        elif var_type_2.lower == "percentage":
+            row_cells[1].text = f"\n{row[var_name_2]:.2%}\n" if pd.notnull(row[var_name_2]) else "\n"
+        else:
+            row_cells[1].text = f"\n{row[var_name_2]}\n" if pd.notnull(row[var_name_2]) else "\n"
+  
+    for row_index, row in enumerate(table.rows):
+        for cell_index, cell in enumerate(row.cells):
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.size = Pt(11)  
+                    run.font.name = "Garamond"
+    
+    for row_index, row in enumerate(table.rows):
+        for cell in row.cells:
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcBorders = tcPr.find(qn("w:tcBorders"))
+            if tcBorders is None:
+                tcBorders = OxmlElement("w:tcBorders")
+                tcPr.append(tcBorders)
+            bottom = OxmlElement("w:bottom")
+            bottom.set(qn("w:val"), "single")
+            bottom.set(qn("w:sz"), "4")
+            bottom.set(qn("w:space"), "0")
+            bottom.set(qn("w:color"), "auto")
+
+            for border in ["left", "right"]:
+                border_element = OxmlElement(f"w:{border}")
+                border_element.set(qn("w:val"), "nil")
+                tcBorders.append(border_element)
+
+    for i, row in enumerate(table.rows):
+        if i == 0:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = True
+        else:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = False
+
+    doc.save(f"{the_chosen_path}\{var_name_1}X{var_name_2}.docx")
+
+
+def proportion_table_to_word(var_name, pretty_name):
+    
+    variable_proportions = (data[var_name].value_counts().sort_index() / len(data[var_name]))
+
+    doc = Document()
+
+    table = doc.add_table(rows=1, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+    # Set table style: https://python-docx.readthedocs.io/en/latest/user/styles-understanding.html
+    table.style = "Light Shading Accent 4"
+    
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = "\n" + pretty_name + "\n"
+    hdr_cells[1].text = "\n" + "Percentages" + "\n"
+    
+    for variable, proportion in variable_proportions.items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = f"\n{variable}\n"
+        row_cells[1].text = f"\n{proportion:.2%}\n"
+  
+    for row_index, row in enumerate(table.rows):
+        for cell_index, cell in enumerate(row.cells):
+            if row_index == 0:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            elif cell_index == 0:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+            else:
+                cell.vertical_alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+
+            for run in paragraph.runs:
+                run.font.size = Pt(11)  
+                run.font.name = "Garamond"
+    
+    for row_index, row in enumerate(table.rows):
+        for cell in row.cells:
+            tc = cell._element
+            tcPr = tc.get_or_add_tcPr()
+            tcBorders = tcPr.find(qn("w:tcBorders"))
+            if tcBorders is None:
+                tcBorders = OxmlElement("w:tcBorders")
+                tcPr.append(tcBorders)
+            bottom = OxmlElement("w:bottom")
+            bottom.set(qn("w:val"), "single")
+            bottom.set(qn("w:sz"), "4")
+            bottom.set(qn("w:space"), "0")
+            bottom.set(qn("w:color"), "auto")
+
+            for border in ["left", "right"]:
+                border_element = OxmlElement(f"w:{border}")
+                border_element.set(qn("w:val"), "nil")
+                tcBorders.append(border_element)
+
+    for i, row in enumerate(table.rows):
+        if i == 0:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = True
+        else:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.bold = False
+
+    doc.save(f"{the_chosen_path}\proptable_{var_name}.docx")
 
 
 def save_and_show_plot(filename, transparency):
@@ -206,8 +361,8 @@ while counter < 1:
     plt.ylim(0, max_y_axis)
     save_and_show_plot("Graph1", False)
 
-    print_paragraph("TABLE - Total Scores Of Participants")
-    print_proportion_table_per_group("total_score", "Participant", data)
+    print_paragraph("TABLE 1 - Total Scores Of Participants")
+    tabulate_table_to_word("Participant", "Participant", "total_score", "Total score", True, "string")
 
     # GRAPH 2
     max_y_axis = determine_max_y_axis("average_score", data)
@@ -222,8 +377,8 @@ while counter < 1:
     plt.ylim(0, max_y_axis)
     save_and_show_plot("Graph2", False)
 
-    print_paragraph("TABLE - Average Scores Of Participants")
-    print_proportion_table_per_group("average_score", "Participant", data)
+    print_paragraph("TABLE 2 - Average Scores Of Participants")
+    tabulate_table_to_word("Participant", "Participant", "average_score", "Average score", True, "float")
 
     # GRAPH 3
     max_y_axis = determine_max_y_axis("total_top_positions", data)
@@ -335,6 +490,6 @@ while counter < 1:
     # Maak de grafieken nog mooier! Legenda wel of niet. Kleuren goed?
     # De twee andere grafieken ook nog doen (Graph 6 en 7)
     # Kijken waar meer functies kunnen worden gedefinieerd.
-    # Tabellen bepalen: wat wil je in tabellen in de report
+    # Verder met de tabellen. Tabellen bepalen: wat wil je in tabellen in de report
     # Report maken met tabellen, grafieken en tekst. Allemaal geautomatiseerd!
     # Kijk of je code HELEMAAL object oriented kan! En efficienter.
