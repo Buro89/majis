@@ -18,7 +18,8 @@ The plots:
 - Graph 4 - (WIP) what is the number of top scores gained within each team, divided by the team size (no. of team members)?
 - Graph 5 - (WIP) what is the amount of scores within the teams that are below the average total score? And equal & above?
 - Graph 6 - (WIP) what is the average score for each team in Round 1 compared to Round 2? 
-- Graph 7 - (still to do) what is the trend in scores across the subsequent rounds for each member of the Majis team?
+- Graph 7 - (WIP) what is the trend in scores across the subsequent rounds for each member of the Majis team?
+- Graph 8 - (still to do) what is the trend in scores across the subsequent rounds for each team?
 
 Files:
 - this file is called in dobbelsteen.py (code for generating the scores in each round)
@@ -240,6 +241,46 @@ def determine_max_y_axis(depvar, dataset):
     max_y_axis = max_score + max_score * 0.2
     return max_y_axis
 
+def make_graph_7(sourcedata):
+
+    
+    palette_for_graph_7 = {
+        "Altan": "#d18e75",
+        "Goromi": "#176482",
+        "Nozomi": "#b6e1f2",
+        "Inizio": "#F2C6B6",
+        "Cyber": "#663737",
+    }
+    round_columns = [col for col in data.columns if col.startswith("Round")]
+
+    data_for_graph_7 = sourcedata.melt(id_vars="Participant",
+                        value_vars=round_columns,
+                        var_name="Round", 
+                        value_name="Score")
+    
+    data_for_graph_7["Round"] = pd.Categorical(data_for_graph_7["Round"], categories=round_columns, ordered=True)
+
+    max_y_axis = determine_max_y_axis("Score", data_for_graph_7)
+
+    plt.figure(figsize=(16, 9))
+    for participant in sourcedata["Participant"]:
+        participant_data = data_for_graph_7[data_for_graph_7["Participant"] == participant]
+        plt.plot(participant_data["Round"], participant_data["Score"], marker="o", label=participant, color=palette_for_graph_7[participant])
+
+    sns.set(style="whitegrid", font="Garamond")
+    plt.rcParams["font.family"] = "Garamond"
+    plt.title("Scores of Majis Across Different Rounds")
+    plt.xlabel("Round", fontsize=32, labelpad=18)
+    plt.ylabel("Score", fontsize=32, labelpad=18)
+    plt.ylim(-2, max_y_axis)
+    plt.xticks(fontsize=24, rotation=90)
+    plt.yticks(fontsize=24)
+    plt.legend(title="Participant")
+    plt.grid(True)
+    save_and_show_plot("Graph7", False)
+
+    return palette_for_graph_7, round_columns, data_for_graph_7, data_for_graph_7["Round"], max_y_axis
+
 
 # %%
 
@@ -249,7 +290,7 @@ number_of_team_members = data["Team"].value_counts().sort_index()
 largest_team = number_of_team_members.max()
 
 print(f"""Check: 
-- you have {number_of_participants} partcipants;
+- you have {number_of_participants} participants;
 - you have {number_of_rounds} rounds
 - you have {largest_team} members in your largest team.")
 """)
@@ -458,7 +499,21 @@ while counter < 1:
     print(data.groupby(["Team"])["Round_1"].mean().reset_index)
 
   
+    # GRAPH 7 (if user has chosen default participants)
 
+    if "Majis" in data["Team"].values:
+        selection_for_graph_7 = data[data["Team"] == "Majis"]
+        make_graph_7(selection_for_graph_7)
+    elif "Pocky Lovers" in data["Team"].values:
+        make_graph_7(data)
+    
+
+
+    #data_for_graph_7 = selection_for_graph_7.melt(id_vars="Participant",
+     #                            value_vars=round_columns,
+      #                           var_name="Round", 
+       #                          value_name="Score")
+    
 
 
 
